@@ -25,9 +25,14 @@ struct GameController: RouteCollection {
 
         let game = dto.toModel()
         try await game.save(on: req.db)
-        return try await game.toDTO().encodeResponse(for: req)
+        
+        let response = try await game.toDTO().encodeResponse(for: req)
+        
+        response.status = .created
+        
+        return response
     }
-
+    
     @Sendable
     func show(req: Request) async throws -> GameDTO {
         try await findGame(req).toDTO()
@@ -42,7 +47,7 @@ struct GameController: RouteCollection {
             .with(\.$loans)
             .first()
         else {
-            throw Abort(.internalServerError, reason: "Game not found")
+            throw Abort(.notFound, reason: "Game not found")
         }
         return game
     }
